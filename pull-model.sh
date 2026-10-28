@@ -16,8 +16,13 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
+if ! pgrep -x "ollama" > /dev/null; then
+    echo "❌ Ollama is not running. Start it first with: ./start.sh"
+    exit 1
+fi
+
 echo "Pulling model: $1"
-ollama pull "$1"
+ollama pull "$1" || { echo "❌ Pull failed. Is Ollama reachable? (try: ollama serve)"; exit 1; }
 
 echo "✓ Model pulled successfully"
 echo "Refresh Open WebUI to see the model"
