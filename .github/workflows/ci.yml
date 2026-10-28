@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Shell lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify scripts are executable
+        run: |
+          for f in *.sh; do
+            if [ ! -x "$f" ]; then
+              echo "::error::$f is not executable. Run: chmod +x $f"
+              exit 1
+            fi
+          done
+
+      - name: Bash syntax check
+        run: |
+          for f in *.sh; do
+            echo "Checking $f"
+            bash -n "$f"
+          done
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: .
+          severity: error
