@@ -76,18 +76,44 @@ docker run -d \
   --restart always \
   ghcr.io/open-webui/open-webui:main
 
-echo -e "${GREEN}✓ Open WebUI started${NC}"
+echo -e "${GREEN}✓ Open WebUI container started${NC}"
 
-echo ""
-echo "🎉 Setup Complete!"
-echo "=================="
-echo ""
-echo "Open WebUI is running at: http://localhost:3000"
-echo ""
-echo "Next steps:"
-echo "1. Open http://localhost:3000 in your browser"
-echo "2. Pull a model: ollama pull qwen2.5-coder:7b"
-echo "3. Start chatting!"
+# Wait for Open WebUI to actually start serving before reporting success
+wait_for_webui() {
+    local url="http://localhost:3000"
+    local attempts=30
+    local count=0
+    echo "Waiting for Open WebUI to become ready..."
+    until curl -fsS -o /dev/null "$url"; do
+        count=$((count + 1))
+        if [ "$count" -ge "$attempts" ]; then
+            return 1
+        fi
+        sleep 2
+    done
+    echo -e "${GREEN}✓ Open WebUI is ready${NC}"
+    return 0
+}
+
+if wait_for_webui; then
+    echo ""
+    echo "🎉 Setup Complete!"
+    echo "=================="
+    echo ""
+    echo "Open WebUI is running at: http://localhost:3000"
+    echo ""
+    echo "Next steps:"
+    echo "1. Open http://localhost:3000 in your browser"
+    echo "2. Pull a model: ollama pull qwen2.5-coder:7b"
+    echo "3. Start chatting!"
+    echo ""
+else
+    echo ""
+    echo -e "${YELLOW}⚠️  Open WebUI did not become ready within 30 attempts (~60s).${NC}"
+    echo "   The container is running but not yet responding. It may still be starting up."
+    echo "   Open http://localhost:3000 in a moment or run ./status.sh to check."
+fi
+
 echo ""
 echo "Useful commands:"
 echo "  ./start.sh    - Start services"
